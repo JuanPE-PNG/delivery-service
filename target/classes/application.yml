@@ -1,0 +1,5 @@
+microservice:
+  auth-service:
+    endpoints:
+      endpoint:
+        uri: http://auth-service/auth/validateToken 
