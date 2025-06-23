@@ -6,6 +6,7 @@ import com.example.deliveryservice.dto.UpdateDeliveryStatusRequest;
 import com.example.deliveryservice.entity.Delivery;
 import com.example.deliveryservice.repository.DeliveryRepository;
 import com.example.deliveryservice.utils.JwtUtil;
+import com.example.deliveryservice.client.NotificationServiceClient;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +24,9 @@ public class DeliveryService {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private NotificationServiceClient notificationServiceClient;
 
     @Value("${microservice.auth-service.endpoints.endpoint.uri}")
     private String validateTokenUri;
@@ -61,6 +65,23 @@ public class DeliveryService {
 
         delivery.setDeliveryStatus(request.getNewStatus());
         Delivery updatedDelivery = deliveryRepository.save(delivery);
+
+        // Notificar a notification-service si la entrega fue completada
+        if ("ENTREGADA".equalsIgnoreCase(updatedDelivery.getDeliveryStatus())) {
+            NotificationServiceClient.DeliveryReceiptNotification notification = new NotificationServiceClient.DeliveryReceiptNotification();
+            notification.deliveryId = updatedDelivery.getDeliveryId();
+            notification.paymentId = updatedDelivery.getPaymentId();
+            notification.userId = updatedDelivery.getUserId();
+            notification.customerAddress = updatedDelivery.getCustomerAddress();
+            notification.customerCity = updatedDelivery.getCustomerCity();
+            notification.deliveryStatus = updatedDelivery.getDeliveryStatus();
+            notification.deliveredAt = updatedDelivery.getUpdatedAt() != null ? updatedDelivery.getUpdatedAt().toString() : null;
+            try {
+                notificationServiceClient.notifyDelivery(notification);
+            } catch (Exception e) {
+                System.out.println("No se pudo notificar a notification-service: " + e.getMessage());
+            }
+        }
 
         return convertToResponse(updatedDelivery, "Estado de entrega actualizado exitosamente");
     }
