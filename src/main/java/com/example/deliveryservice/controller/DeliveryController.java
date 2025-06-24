@@ -78,7 +78,7 @@ public class DeliveryController {
         return ResponseEntity.ok(response);
     }
 
-    private String extractToken(String authorizationHeader) {
+    public String extractToken(String authorizationHeader) {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             return authorizationHeader.substring(7);
         } else {

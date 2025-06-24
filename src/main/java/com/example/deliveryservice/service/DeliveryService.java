@@ -131,7 +131,7 @@ public class DeliveryService {
         }
     }
 
-    private DeliveryResponse convertToResponse(Delivery delivery, String message) {
+    public DeliveryResponse convertToResponse(Delivery delivery, String message) {
         DeliveryResponse response = new DeliveryResponse();
         response.setDeliveryId(delivery.getDeliveryId());
         response.setPaymentId(delivery.getPaymentId());
